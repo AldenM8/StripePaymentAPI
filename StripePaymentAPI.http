@@ -1,0 +1,6 @@
+@StripePaymentAPI_HostAddress = http://localhost:5100
+
+GET {{StripePaymentAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
