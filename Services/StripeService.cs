@@ -6,18 +6,19 @@ namespace StripePaymentAPI.Services
 {
     public class StripeService
     {
-        public async Task<string> CreatePaymentIntent(decimal amount, string currency)
-        {
-            var paymentIntentService = new PaymentIntentService();
-            var paymentIntent = await paymentIntentService.CreateAsync(new PaymentIntentCreateOptions
-            {
-                Amount = (long)(amount * 100), // Stripe 以 "分" 為單位
-                Currency = currency, // USD, TWD, etc.
-                PaymentMethodTypes = new List<string> { "card" },
-            });
+        //自訂付款頁面用 暫時不需要
+        //public async Task<string> CreatePaymentIntent(decimal amount, string currency)
+        //{
+        //    var paymentIntentService = new PaymentIntentService();
+        //    var paymentIntent = await paymentIntentService.CreateAsync(new PaymentIntentCreateOptions
+        //    {
+        //        Amount = (long)(amount * 100), // Stripe 以 "分" 為單位
+        //        Currency = currency, // USD, TWD, etc.
+        //        PaymentMethodTypes = new List<string> { "card" },
+        //    });
 
-            return paymentIntent.ClientSecret; // 傳回給前端
-        }
+        //    return paymentIntent.ClientSecret; // 傳回給前端
+        //}
         public async Task<string> CreateCheckoutSession(List<ProductRequest> products)
         {
             try
@@ -62,6 +63,39 @@ namespace StripePaymentAPI.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"其他錯誤: {ex.Message}");
+                return null;
+            }
+        }
+        public async Task<string> CreateSubscription(string customerEmail, string priceId)
+        {
+            try
+            {
+                var options = new SessionCreateOptions
+                {
+                    PaymentMethodTypes = new List<string> { "card" },
+                    LineItems = new List<SessionLineItemOptions>
+                        {
+                            new SessionLineItemOptions
+                            {
+                                Price = priceId, // 這是你在 Stripe 設定的訂閱 Price ID
+                                Quantity = 1
+                            }
+                        },
+                    Mode = "subscription", // 設定為訂閱模式
+                    CustomerEmail = customerEmail,
+                    SuccessUrl = "https://google.com",
+                    CancelUrl = "https://google.com"
+                };
+
+
+                var service = new SessionService();
+                var session = await service.CreateAsync(options);
+
+                return session.Url;
+            }
+            catch (StripeException ex)
+            {
+                Console.WriteLine($"Stripe 訂閱錯誤: {ex.Message}");
                 return null;
             }
         }

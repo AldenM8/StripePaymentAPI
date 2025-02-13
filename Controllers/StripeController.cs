@@ -17,19 +17,19 @@ namespace StripePaymentAPI.Controllers
 
 
         /// <summary>
-        /// 創建 PaymentIntent（前端需要 Stripe.js 來處理付款）
+        /// 創建 PaymentIntent（前端需要 Stripe.js 來處理付款，暫時不需要）
         /// </summary>
-        [HttpPost("create-payment-intent")]
-        public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentRequest request)
-        {
-            if (request.Amount <= 0)
-            {
-                return BadRequest(new { message = "金額必須大於 0。" });
-            }
+        //[HttpPost("create-payment-intent")]
+        //public async Task<IActionResult> CreatePaymentIntent([FromBody] PaymentRequest request)
+        //{
+        //    if (request.Amount <= 0)
+        //    {
+        //        return BadRequest(new { message = "金額必須大於 0。" });
+        //    }
 
-            var clientSecret = await _stripeService.CreatePaymentIntent(request.Amount, request.Currency);
-            return Ok(new { clientSecret });
-        }
+        //    var clientSecret = await _stripeService.CreatePaymentIntent(request.Amount, request.Currency);
+        //    return Ok(new { clientSecret });
+        //}
 
         /// <summary>
         /// 創建 Checkout Session（Stripe 託管付款頁面）
@@ -53,6 +53,32 @@ namespace StripePaymentAPI.Controllers
 
             return Ok(new { url = sessionUrl });
         }
+
+
+        /// <summary>
+        /// 創建 Subscription（訂閱）
+        /// </summary>
+        /// <summary>
+        /// 創建 subscription（訂閱）
+        /// </summary>
+        /// 
+        [HttpPost("create-subscription")]
+        public async Task<IActionResult> CreateSubscription([FromBody] SubscriptionRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.PriceId))
+            {
+                return BadRequest(new { message = "請提供 Email 和 PriceId。" });
+            }
+
+            var sessionUrl = await _stripeService.CreateSubscription(request.Email, request.PriceId);
+            if (string.IsNullOrEmpty(sessionUrl))
+            {
+                return StatusCode(500, new { message = "創建訂閱失敗。" });
+            }
+
+            return Ok(new { url = sessionUrl });
+        }
+
 
         /// <summary>
         /// 退款
@@ -116,6 +142,12 @@ namespace StripePaymentAPI.Controllers
         public decimal Price { get; set; } // 商品價格
         public string Currency { get; set; } // 貨幣（如 "usd", "twd"）
         public int Quantity { get; set; } // 數量
+    }
+
+    public class SubscriptionRequest
+    {
+        public string Email { get; set; } // 客戶 Email
+        public string PriceId { get; set; } // Stripe 設定的價格 ID
     }
 
 }

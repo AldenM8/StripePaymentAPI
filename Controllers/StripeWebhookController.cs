@@ -28,7 +28,21 @@ namespace StripePaymentAPI.Controllers
 
                 Console.WriteLine($"收到 Stripe 事件: {stripeEvent.Type}");
 
-                if (stripeEvent.Type == "payment_intent.succeeded")
+                if (stripeEvent.Type == "customer.subscription.created")
+                {
+                    var subscription = stripeEvent.Data.Object as Subscription;
+                    Console.WriteLine($"新的訂閱已建立：{subscription?.Id}");
+                }
+                else if (stripeEvent.Type == "invoice.payment_succeeded")
+                {
+                    var invoice = stripeEvent.Data.Object as Invoice;
+                    Console.WriteLine($"訂閱付款成功：{invoice?.Subscription}");
+                }
+                else if (stripeEvent.Type == "invoice.payment_failed")
+                {
+                    var invoice = stripeEvent.Data.Object as Invoice;
+                    Console.WriteLine($"訂閱付款失敗，請通知用戶：{invoice?.Subscription}");
+                }else if (stripeEvent.Type == "payment_intent.succeeded")
                 {
                     var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                     Console.WriteLine($"成功付款：{paymentIntent?.Id}");
